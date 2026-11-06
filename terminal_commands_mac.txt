@@ -1,0 +1,22 @@
+VOICEGUARD — FIRST SETUP (Mac)
+
+Open Terminal. Paste each command separately:
+
+mkdir -p ~/Developer/voiceguard
+cd ~/Developer/voiceguard
+
+After extracting this ZIP, copy its contents into ~/Developer/voiceguard.
+
+Create the environment:
+python3 -m venv .venv
+source .venv/bin/activate
+
+Verify:
+python --version
+python -m pip --version
+
+IMPORTANT:
+This archive is the research blueprint, not the runnable detector.
+Do not install PyTorch, download datasets, or start training yet.
+The next package will contain the runnable baseline after the data/licence and split audit.
+Avoid downloading ASVspoof 2021 DF (~34.5 GB) or ASVspoof 5 (~84 GB) in full on the current Mac.
