@@ -5,8 +5,7 @@ Build a matrix recording task, dataset, languages, generators, channels, split s
 - Maltby et al. (2026), robustness in deepfake speech detection.
 - MLAAD (IJCNN 2024).
 - ASVspoof 2021 and ASVspoof 5.
-- The October 2026 cross-lingual voice-clone resource (its Zenodo record says files are restricted).
-Do not claim novelty until the matrix is complete.
+Novelty is judged only after the matrix is complete.
 
 ## Stage 1: dataset feasibility
 - MLAAD: maintainers describe 456,000 utterances, about 1,002.9 hours, and 54 languages. Hugging Face card states CC BY-NC 4.0. It is non-commercial research data. Audit how human source speech and synthetic language coverage are constructed; 54 languages does not mean balanced native-speaker coverage in all 54.

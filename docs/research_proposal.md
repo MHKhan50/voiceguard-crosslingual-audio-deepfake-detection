@@ -33,4 +33,4 @@ RQ5: Which compact architecture offers the best accuracy, calibration, latency, 
 Equal Error Rate (EER), ROC-AUC, PR-AUC, false-positive rate at predeclared operating points, Expected Calibration Error, Brier score, risk-coverage curves, inference latency, peak memory, and model size. Accuracy alone is insufficient.
 
 ## Integrity
-Do not claim novelty, superiority, real-world fraud prevention, or funding outcomes before evidence exists. Do not market the demo as a forensic detector.
+No claim of novelty, superiority or real-world fraud prevention is made before results exist. The demo is a research tool, not a forensic detector.

@@ -17,11 +17,13 @@ Dataset: https://huggingface.co/datasets/mueller91/MLAAD
 https://arxiv.org/abs/2109.00537
 Official challenge: https://www.asvspoof.org/index2021.html
 
-6. “Where Does Spoofing Evidence Live?” cross-lingual voice-clone resource (Zenodo, 16 October 2026):
-https://zenodo.org/records/23424806
-The record indicates restricted files; verify access before relying on it.
-
-7. ASVspoof 5 dataset packaging:
+6. ASVspoof 5 dataset packaging:
 https://huggingface.co/datasets/SpeechAntiSpoofingBenchmarks/ASVspoof5
+
+7. Wang et al. (2020), ASVspoof 2019: a large-scale public database of synthesized, converted and replayed speech (dataset used in the first baseline):
+https://arxiv.org/abs/1911.01601
+
+8. Chen et al. (2022), WavLM: Large-scale self-supervised pre-training for full stack speech processing (frozen feature model):
+https://arxiv.org/abs/2110.13900
 
 This is an initial evidence list. Novelty, publication potential, and funding fit require further verification.

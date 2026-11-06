@@ -17,7 +17,7 @@ Hugging Face: https://huggingface.co/datasets/SpeechAntiSpoofingBenchmarks/ASVsp
 Listed size is approximately 84 GB. Do not download the full dataset locally.
 
 ## Hardware-aware plan
-Known machine: MacBook Air M4, 16 GB unified memory; last reported free storage approximately 18 GiB.
+Local machine: MacBook with Apple M4 and 16 GB unified memory, limited free disk. Heavy feature extraction runs on a Kaggle GPU.
 - Begin with a streamed/subsampled corpus.
 - Limit duration and batch size.
 - Cache only selected files.
