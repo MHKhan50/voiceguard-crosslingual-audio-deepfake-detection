@@ -25,9 +25,23 @@ def table(results: Dict) -> str:
     return "\n".join(rows)
 
 
+def calibration_table(results: Dict) -> str:
+    rows = ["| Features + classifier | Condition | Cllr | minCllr | Calibration loss | ECE raw | ECE Platt (dev mix) | ECE LLR at eval prior |",
+            "|---|---|---|---|---|---|---|---|"]
+    for key, r in results["runs"].items():
+        for c, m in r.items():
+            rows.append("| %s | %s | %.3f | %.3f | %.3f | %.3f | %.3f | %.3f |" % (
+                key, COND_LABEL[c], m["cllr"], m["min_cllr"], m["cllr"] - m["min_cllr"],
+                m["ece_uncalibrated"], m["ece_platt_dev"], m["ece"]))
+    return "\n".join(rows)
+
+
 def write_report(results: Dict, out: str) -> None:
     with open(os.path.join(out, "tables.md"), "w") as fh:
         fh.write("# VoiceGuard baseline results\n\n" + table(results) + "\n")
+        fh.write("\n## Calibration\n\nCllr and minCllr in bits (lower is better) do not depend on the class mix. "
+                 "ECE columns: raw classifier output, Platt fitted on dev (v0.2 method), and the LLR calibrator "
+                 "at the eval sample's spoof share.\n\n" + calibration_table(results) + "\n")
     keys = list(results["runs"])
     conds = list(COND_LABEL)
     x = np.arange(len(keys))

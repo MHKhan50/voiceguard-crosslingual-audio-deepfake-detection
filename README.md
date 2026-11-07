@@ -36,8 +36,8 @@ A pilot on one well-documented dataset before the cross-lingual stage.
 | Sample | All 25,380 training clips; dev 1,000 bona fide + up to 170 per attack (calibration only); eval up to 600 clips per attack + 2,000 bona fide, fixed seed 42. Clip IDs are saved in `manifest.json`. |
 | Channel conditions | Clean; simulated phone line (8 kHz, 300-3400 Hz band, G.711-style mu-law); phone line with white noise at 15 dB SNR (`src/voiceguard/channel.py`). Training uses clean audio only. |
 | Features | Frozen WavLM Base+ hidden states (layers 3, 6, 9, 12, mean-pooled over the first 4 s); MFCC mean and standard deviation as an acoustic baseline. |
-| Classifiers | Logistic regression (balanced classes) and a one-hidden-layer MLP; Platt calibration fitted on dev only. |
-| Metrics | EER with bootstrap 95% CI, EER per attack and on unseen attacks, ROC-AUC, ECE (before and after calibration), Brier score, error at 100/90/80/70/50% coverage (abstention). A majority-class baseline is included. |
+| Classifiers | Logistic regression (balanced classes) and a one-hidden-layer MLP. v0.2: Platt calibration fitted on dev only. v0.3: an affine map to log-likelihood ratios fitted on dev with equal class weights, then a probability at the stated spoof share of the eval sample (Platt kept for comparison). |
+| Metrics | EER with bootstrap 95% CI, Cllr and minCllr (v0.3; independent of the class mix), EER per attack and on unseen attacks, ROC-AUC, ECE (before and after calibration), Brier score, error at 100/90/80/70/50% coverage (abstention). A majority-class baseline is included. |
 
 ### Run on Kaggle
 1. New notebook, *File > Import notebook*, paste the GitHub link to `notebooks/voiceguard_kaggle_baseline.ipynb`.

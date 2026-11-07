@@ -26,4 +26,7 @@ https://arxiv.org/abs/1911.01601
 8. Chen et al. (2022), WavLM: Large-scale self-supervised pre-training for full stack speech processing (frozen feature model):
 https://arxiv.org/abs/2110.13900
 
+9. Brümmer and du Preez (2006), Application-independent evaluation of speaker detection, Computer Speech & Language 20(2-3): 230-275 (Cllr, used for calibration):
+https://dblp.org/rec/journals/csl/BrummerP06.html
+
 This is an initial evidence list. Novelty, publication potential, and funding fit require further verification.

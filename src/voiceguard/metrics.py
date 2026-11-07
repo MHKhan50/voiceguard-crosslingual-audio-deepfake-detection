@@ -4,6 +4,7 @@ from __future__ import annotations
 from typing import Dict, List, Sequence
 
 import numpy as np
+from sklearn.isotonic import IsotonicRegression
 from sklearn.metrics import roc_auc_score, roc_curve
 
 
@@ -70,3 +71,34 @@ def bootstrap_eer_ci(labels: Sequence[int], scores: Sequence[float], n: int = 50
         if not np.isnan(v):
             vals.append(v)
     return [float(np.percentile(vals, 2.5)), float(np.percentile(vals, 97.5))]
+
+
+def cllr(labels: Sequence[int], llr: Sequence[float]) -> float:
+    """Log-likelihood-ratio cost in bits (Brummer and du Preez, 2006); spoof is the target class.
+
+    It does not depend on the class mix of the test set. 0 is perfect; 1 is a system that always outputs LLR 0.
+    """
+    y = np.asarray(labels)
+    s = np.asarray(llr, dtype=float)
+    if y.min() == y.max():
+        return float("nan")
+    spoof = np.mean(np.logaddexp(0.0, -s[y == 1]))
+    bona = np.mean(np.logaddexp(0.0, s[y == 0]))
+    return float((spoof + bona) / (2 * np.log(2)))
+
+
+def min_cllr(labels: Sequence[int], scores: Sequence[float]) -> float:
+    """Cllr after the best monotonic recalibration of the scores (pool-adjacent-violators).
+
+    Measures discrimination only; cllr - min_cllr is the calibration loss.
+    """
+    y = np.asarray(labels)
+    s = np.asarray(scores, dtype=float)
+    if y.min() == y.max():
+        return float("nan")
+    post = IsotonicRegression(y_min=0.0, y_max=1.0, increasing=True,
+                              out_of_bounds="clip").fit_transform(s, y.astype(float))
+    prior_logodds = np.log(y.mean() / (1 - y.mean()))
+    with np.errstate(divide="ignore"):
+        llr = np.log(post) - np.log1p(-post) - prior_logodds
+    return cllr(y, llr)

@@ -2,6 +2,7 @@ import json
 
 import numpy as np
 
+from voiceguard import metrics as M
 from voiceguard import pipeline
 from voiceguard.report import write_report
 
@@ -33,3 +34,22 @@ def test_end_to_end_mock_run(tmp_path):
     json.dumps(res)
     write_report(res, str(tmp_path))
     assert (tmp_path / "tables.md").exists() and (tmp_path / "fig_eer_per_attack.png").exists()
+
+
+def test_llr_calibrator_ignores_dev_class_mix():
+    rng = np.random.default_rng(0)
+
+    def scores(n_bona, n_spoof):
+        y = np.array([0] * n_bona + [1] * n_spoof)
+        llr = rng.standard_normal(len(y)) * 1.5 + np.where(y == 1, 1.1, -1.1)
+        return 1 / (1 + np.exp(-(llr + 2.0))), y  # raw scores carry a prior offset of +2
+
+    raw50, y50 = scores(1000, 1000)
+    raw80, y80 = scores(500, 2000)
+    a = pipeline.LLRCalibrator().fit(raw50, y50)
+    b = pipeline.LLRCalibrator().fit(raw80, y80)
+    grid = np.linspace(0.05, 0.95, 7)
+    assert np.max(np.abs(a.llr(grid) - b.llr(grid))) < 0.25
+    rawe, ye = scores(2000, 8000)
+    post = a.posterior(rawe, 0.8)
+    assert M.ece(ye, post) < 0.03

@@ -38,7 +38,7 @@ def test_runner_end_to_end(tmp_path, monkeypatch):
     out = tmp_path / "out"
     monkeypatch.setattr(sys, "argv", ["run", "--data", str(tmp_path / "data"), "--out", str(out),
                                       "--cache", str(tmp_path / "cache"), "--eval-per-attack", "30",
-                                      "--eval-bonafide", "30"])
+                                      "--eval-bonafide", "30", "--reuse-from", ""])
     run_kaggle.main()
     res = json.loads((out / "results.json").read_text())
     assert res["counts"]["eval"] == 90
@@ -46,3 +46,30 @@ def test_runner_end_to_end(tmp_path, monkeypatch):
     r = res["runs"]["wavlm_l3+logreg"]
     assert r["clean"]["eer"] <= r["phone_noise15"]["eer"]
     assert (out / "fig_eer_by_condition.png").exists() and (out / "manifest.json").exists()
+    assert 0 <= r["clean"]["min_cllr"] <= r["clean"]["cllr"] + 1e-9
+    assert "## Calibration" in (out / "tables.md").read_text()
+
+
+def test_runner_reuses_features_from_earlier_run(tmp_path, monkeypatch):
+    _layout(tmp_path / "data")
+    fake = types.ModuleType("voiceguard.extract")
+    fake.Extractor = FakeExtractor
+    monkeypatch.setitem(sys.modules, "voiceguard.extract", fake)
+    from voiceguard import run_kaggle
+    common = ["--data", str(tmp_path / "data"), "--eval-per-attack", "30", "--eval-bonafide", "30"]
+    first = tmp_path / "earlier"
+    monkeypatch.setattr(sys, "argv", ["run", "--out", str(first / "results"), "--cache", str(first / "features"),
+                                      "--reuse-from", ""] + common)
+    run_kaggle.main()
+
+    class NoExtractor:
+        def __init__(self):
+            raise AssertionError("features should have been reused")
+
+    fake.Extractor = NoExtractor
+    monkeypatch.setattr(sys, "argv", ["run", "--out", str(tmp_path / "new"), "--cache", str(tmp_path / "cache2"),
+                                      "--reuse-from", str(tmp_path / "earlier_parent")] + common)
+    (tmp_path / "earlier_parent").mkdir()
+    first.rename(tmp_path / "earlier_parent" / "earlier")
+    run_kaggle.main()
+    assert (tmp_path / "new" / "results.json").exists()
