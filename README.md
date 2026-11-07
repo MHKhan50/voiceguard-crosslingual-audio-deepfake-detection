@@ -53,13 +53,48 @@ python -m pytest -q
 ```
 The tests cover protocol parsing, the phone-line simulation, the metrics, the classifiers and a full mock run of the Kaggle runner with a fake feature extractor.
 
-### Results
-To be filled in from the Kaggle run.
+### Results (Kaggle run, 7 Nov 2026, GPU T4 x2, one seed)
+Sample: 25,380 training clips, 2,020 dev clips, 9,800 eval clips (2,000 bona fide, 600 per attack), each eval clip in
+three conditions. Full tables: [`results/tables.md`](results/tables.md); all numbers: [`results/results.json`](results/results.json);
+clip IDs: [`results/manifest.json`](results/manifest.json).
+
+EER % [bootstrap 95% CI], lower is better:
+
+| Features + classifier | Clean | Phone line | Phone + noise 15 dB |
+|---|---|---|---|
+| MFCC + logistic regression | 18.1 [17.3, 18.9] | 50.6 [49.6, 51.9] | 38.6 [37.7, 39.6] |
+| MFCC + MLP | 16.3 [15.5, 17.1] | 33.8 [32.7, 34.9] | 50.0 [49.6, 50.4] |
+| WavLM layer 3 + MLP | 1.9 [1.6, 2.4] | 12.0 [11.2, 12.8] | 35.2 [34.2, 36.3] |
+| WavLM layer 6 + logistic regression | 2.7 [2.2, 3.2] | 3.3 [2.8, 3.6] | 9.8 [9.1, 10.4] |
+| **WavLM layer 6 + MLP** | **1.8 [1.5, 2.2]** | **2.0 [1.7, 2.4]** | **9.3 [8.6, 9.9]** |
+| WavLM layer 9 + MLP | 4.1 [3.7, 4.5] | 6.4 [5.8, 7.1] | 11.7 [10.9, 12.5] |
+| WavLM layer 12 + logistic regression | 5.1 [4.7, 5.5] | 9.6 [8.9, 10.3] | 33.5 [32.5, 34.5] |
+
+What the run shows:
+- **The layer matters more than the classifier under shift.** Layer 3 and layer 6 are close on clean audio
+  (1.9% and 1.8% with the MLP), but on the phone line layer 3 rises to 12.0% while layer 6 stays at 2.0%.
+  With noise, layers 3 and 12 reach 25-36% while layers 6 and 9 stay at 9-13%.
+- **The phone line alone breaks the MFCC baseline** (EER 33.8-50.6%, close to chance), while the best WavLM
+  features barely move. Adding noise is the hardest condition for every model.
+- **Per attack (layer 6 + MLP):** with noise, A18 rises from 3.7% to 25.6%, A17 from 1.1% to 18.4% and A19
+  from 4.7% to 14.4%; most other attacks stay below 10% (`results/fig_eer_per_attack.png`). A19 reuses a training
+  algorithm (A06) and is still among the hardest.
+- **Abstention helps only when the model is uncertain in the right places.** For layer 6 + MLP with noise, the error
+  falls from 10.7% on all clips to 5.7% on the 80% it is most confident about and 3.3% at 50%. For layer 3 + logistic
+  regression with noise, the error stays between 58% and 65% at every coverage: the model is confidently wrong.
+- **Calibration fitted on dev did not transfer.** For layer 6 + MLP, ECE on clean eval was 0.004 before and 0.048
+  after Platt scaling. A likely reason is the class mix: the dev sample is about half spoof, the eval sample 80% spoof.
+  This is a design issue to fix, not a property of the model.
+
+![EER by condition](results/fig_eer_by_condition.png)
+![EER per attack](results/fig_eer_per_attack.png)
 
 ### Limitations of this baseline
 - One English corpus; the cross-lingual question needs MLAAD or another multilingual set after a licence and content audit.
 - The phone line is simulated, not recorded over a real network.
 - One seed per classifier in this first run.
+- The dev sample used for calibration has a different bona fide to spoof ratio from the eval sample.
+- Accuracy-type errors depend on the 80% spoof share of the eval sample; EER is the main measure.
 
 ## Hardware
 Local machine: MacBook with Apple M4 and 16 GB unified memory. Feature extraction runs on a Kaggle GPU; local work is limited to tests and analysis.
