@@ -9,7 +9,7 @@ https://www.gov.uk/government/calls-for-evidence/unauthorised-fraud-in-the-uk/un
 3. Maltby et al. (2026), Robustness in deepfake speech detection: A survey of failure mechanisms including an experimental case study:
 https://doi.org/10.1016/j.csl.2026.102037
 
-4. Müller et al. (2024), MLAAD: The Multi-Language Audio Anti-Spoofing Dataset:
+4. Müller et al. (2024; v9 2026), MLAAD: The Multi-Language Audio Anti-Spoofing Dataset (licence and content audited in `docs/data_audit.md`):
 https://arxiv.org/abs/2401.09512
 Dataset: https://huggingface.co/datasets/mueller91/MLAAD
 
@@ -28,5 +28,12 @@ https://arxiv.org/abs/2110.13900
 
 9. Brümmer and du Preez (2006), Application-independent evaluation of speaker detection, Computer Speech & Language 20(2-3): 230-275 (Cllr, used for calibration):
 https://dblp.org/rec/journals/csl/BrummerP06.html
+
+10. M-AILABS Speech Dataset (bona fide speech for MLAAD; official page and licence):
+https://github.com/imdatceleste/m-ailabs-dataset
+
+11. Xue et al. (2026), RTCFake: Speech Deepfake Detection in Real-Time Communication, Findings of ACL 2026, pp. 5763-5775:
+https://aclanthology.org/2026.findings-acl.285/
+Dataset: https://huggingface.co/datasets/JunXueTech/RTCFake
 
 This is an initial evidence list. Novelty, publication potential, and funding fit require further verification.

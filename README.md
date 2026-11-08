@@ -123,7 +123,7 @@ Full calibration table for all models: [`results/tables.md`](results/tables.md#c
 ![EER per attack](results/fig_eer_per_attack.png)
 
 ### Limitations of this baseline
-- One English corpus; the cross-lingual question needs MLAAD or another multilingual set after a licence and content audit.
+- One English corpus. The licence and content audit for the cross-lingual stage is in [`docs/data_audit.md`](docs/data_audit.md): MLAAD is non-commercial (CC BY-NC 4.0) and has matching real speech (M-AILABS) in only 8 of its 51 languages.
 - The phone line is simulated, not recorded over a real network.
 - Three classifier seeds, but one clip sample and one feature extraction; the sd does not cover sampling variation.
 - Calibration is fitted on clean dev audio only; it does not transfer to the noisy phone line (see Cllr above).
