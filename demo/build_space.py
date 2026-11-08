@@ -209,9 +209,29 @@ def main() -> None:
     report["size_mb"] = {"fp32": round(onnx32.stat().st_size / 1e6, 1), "int8": round(onnx8.stat().st_size / 1e6, 1)}
     print("EER on check clips:", report["eer_on_check_clips"], "| sizes MB:", report["size_mb"], flush=True)
 
-    if report["onnx_fp32_vs_torch"]["max_abs_llr"] > 0.05:
-        sys.exit("ONNX float32 does not reproduce PyTorch; nothing published. Report: %s" % json.dumps(report))
+    # Where do the single-clip demo scores and the batched experiment scores differ? In the experiments, shorter
+    # clips were zero-padded to the longest clip of their batch.
+    secs = np.array([len(c) / 16000 for c in clips])
+    gap = np.abs(llr32 - llr_batched)
+    report["demo_vs_batched_by_length"] = []
+    for label, lo, hi in (("under 2 s", 0, 2), ("2-3 s", 2, 3), ("3-4 s", 3, 3.99), ("4 s (cut, so not padded)", 3.99, 9)):
+        m = (secs >= lo) & (secs < hi)
+        if m.any():
+            report["demo_vs_batched_by_length"].append({
+                "seconds": label, "n": int(m.sum()),
+                "mean_abs_llr": float(gap[m].mean()),
+                "verdict_agreement": float(np.mean(verdicts(llr32[m]) == verdicts(llr_batched[m])))})
+    print("demo vs batched by clip length:", report["demo_vs_batched_by_length"], flush=True)
+
     eer = report["eer_on_check_clips"]
+    fp32_ok = (report["onnx_fp32_vs_torch"]["verdict_agreement"] >= 0.995
+               and report["onnx_fp32_vs_torch"]["mean_abs_llr"] <= 0.01
+               and abs(eer["onnx_fp32"] - eer["pytorch_single_clip"]) <= 0.002)
+    report["onnx_fp32_check"] = ("passed" if fp32_ok else "failed") + (
+        ": verdict agreement >= 99.5%, mean |dLLR| <= 0.01 and EER within 0.2 points of PyTorch")
+    (WORK / "parity.json").write_text(json.dumps(report, indent=1))
+    if not fp32_ok:
+        sys.exit("ONNX float32 does not reproduce PyTorch; nothing published (see parity.json).")
     use_int8 = (report["onnx_int8_vs_onnx_fp32"]["verdict_agreement"] >= 0.98
                 and abs(eer["onnx_int8"] - eer["onnx_fp32"]) <= 0.01)
     chosen = onnx8 if use_int8 else onnx32
@@ -219,6 +239,9 @@ def main() -> None:
     report["rule"] = "int8 if verdict agreement with float32 >= 98% and EER within 1 point on the check clips"
     (WORK / "parity.json").write_text(json.dumps(report, indent=1))
     print("publishing the %s model" % report["published_model"], flush=True)
+    if os.environ.get("VOICEGUARD_DRY_RUN"):
+        print("dry run: not publishing")
+        return
 
     # 5. Publish the static Space.
     api = HfApi(token=token)

@@ -22,8 +22,9 @@ the user's device with ONNX Runtime Web; no audio is uploaded.
 | Experiment results | EER 1.8% clean, 2.0% simulated phone line, 9.3% phone line with noise at 15 dB SNR (ASVspoof 2019 LA eval sample, 9,800 clips) |
 | Browser check | On {n_check} eval clips: EER {eer_demo}% for this model and {eer_batched}% for the experiment pipeline; same verdict on {agree}% of clips (float32). Details in `parity.json` |
 
-The experiments computed features for batches of clips in float16 on a GPU; the browser computes one clip at a
-time in {precision} on the CPU, which is why the two can differ slightly.
+The experiments computed features for zero-padded batches of clips in float16 on a GPU; the browser computes
+one unpadded clip at a time in {precision} on the CPU, which is why the two can differ, mostly for short clips
+(see `demo_vs_batched_by_length` in `parity.json`).
 
 ## Limitations
 
