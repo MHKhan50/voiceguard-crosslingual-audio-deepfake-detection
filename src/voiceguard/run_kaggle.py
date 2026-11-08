@@ -13,10 +13,11 @@ import time
 import numpy as np
 
 from . import pipeline
+from .channel import have_libopus
 from .protocol import find_dir, find_file, read_protocol, stratified_sample
 
 KNOWN_ATTACKS = ["A16", "A19"]  # same algorithms as A04 and A06 in training (ASVspoof 2019 LA design)
-CONDITIONS = ["clean", "phone", "phone_noise15"]
+CONDITIONS = ["clean", "phone", "phone_noise15", "opus16"]
 
 
 def find_reusable_features(root: str, ids: dict) -> str:
@@ -92,6 +93,8 @@ def main() -> None:
     ap.add_argument("--reuse-from", default="/kaggle/input",
                     help="search here for features saved by an earlier run with the same clip IDs")
     args = ap.parse_args()
+    if "opus16" in CONDITIONS and not have_libopus():
+        raise SystemExit("The opus16 condition needs ffmpeg with the libopus encoder (apt-get install ffmpeg).")
     os.makedirs(args.out, exist_ok=True)
     os.makedirs(args.cache, exist_ok=True)
 
@@ -164,9 +167,9 @@ def main() -> None:
             results["runs"][key] = per_seed[clf_seeds[0]]
             results["seed_summary"][key] = pipeline.summarise_seeds(per_seed)
             sm = results["seed_summary"][key]
-            print("%-16s EER %% mean (sd) over %d seeds: clean %.1f (%.2f)  phone %.1f (%.2f)  phone+noise %.1f (%.2f)" % (
-                key, len(clf_seeds), *[x for c in CONDITIONS for x in
-                                       (100 * sm[c]["eer"]["mean"], 100 * sm[c]["eer"]["std"])]), flush=True)
+            print("%-16s EER %% mean (sd) over %d seeds: " % (key, len(clf_seeds)) + "  ".join(
+                "%s %.1f (%.2f)" % (c, 100 * sm[c]["eer"]["mean"], 100 * sm[c]["eer"]["std"]) for c in CONDITIONS),
+                flush=True)
     results["classifier_seeds"] = clf_seeds
     if args.export:
         export_model(args.export, F, ytr, ydv, yev, clf_seeds[0], results, os.path.join(args.out, "model"))

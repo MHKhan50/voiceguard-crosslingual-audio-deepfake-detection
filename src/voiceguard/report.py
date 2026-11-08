@@ -10,7 +10,8 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
 import numpy as np  # noqa: E402
 
-COND_LABEL = {"clean": "Clean", "phone": "Phone line", "phone_noise15": "Phone + noise 15 dB"}
+COND_LABEL = {"clean": "Clean", "phone": "Phone line", "phone_noise15": "Phone + noise 15 dB",
+              "opus16": "Opus 16 kbps"}
 
 
 def table(results: Dict) -> str:
@@ -61,18 +62,18 @@ def write_report(results: Dict, out: str) -> None:
                      "weights and early-stopping split.\n\n" % (", ".join(map(str, seeds)), seeds[0] if seeds else "?")
                      + seed_table(results) + "\n")
     keys = list(results["runs"])
-    conds = list(COND_LABEL)
+    conds = [c for c in COND_LABEL if c in results["runs"][keys[0]]]
     x = np.arange(len(keys))
-    w = 0.27
+    w = 0.8 / len(conds)
     fig, ax = plt.subplots(figsize=(max(8, len(keys) * 0.9), 4.2))
-    colors = ["#2a6f97", "#e09f3e", "#9e2a2b"]
+    colors = ["#2a6f97", "#e09f3e", "#9e2a2b", "#5a7d2a"]
     for i, c in enumerate(conds):
-        ax.bar(x + (i - 1) * w, [100 * results["runs"][k][c]["eer"] for k in keys], w,
+        ax.bar(x + (i - (len(conds) - 1) / 2) * w, [100 * results["runs"][k][c]["eer"] for k in keys], w,
                label=COND_LABEL[c], color=colors[i])
     ax.set_xticks(x)
     ax.set_xticklabels(keys, rotation=35, ha="right", fontsize=8)
     ax.set_ylabel("EER (%), lower is better")
-    ax.set_title("ASVspoof 2019 LA eval sample: clean vs simulated phone line")
+    ax.set_title("ASVspoof 2019 LA eval sample under channel conditions")
     ax.legend(frameon=False, fontsize=8)
     ax.spines[["top", "right"]].set_visible(False)
     fig.tight_layout()
@@ -84,7 +85,7 @@ def write_report(results: Dict, out: str) -> None:
     fig, ax = plt.subplots(figsize=(9, 3.8))
     xa = np.arange(len(attacks))
     for i, c in enumerate(conds):
-        ax.bar(xa + (i - 1) * w, [100 * results["runs"][best][c]["per_attack_eer"][a] for a in attacks], w,
+        ax.bar(xa + (i - (len(conds) - 1) / 2) * w, [100 * results["runs"][best][c]["per_attack_eer"][a] for a in attacks], w,
                label=COND_LABEL[c], color=colors[i])
     ax.set_xticks(xa)
     ax.set_xticklabels(attacks)

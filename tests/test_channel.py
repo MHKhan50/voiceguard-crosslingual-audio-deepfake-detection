@@ -33,3 +33,16 @@ def test_noise_condition_is_seeded():
     b = apply_condition(x, "phone_noise15", seed=3)
     assert np.array_equal(a, b)
     assert not np.array_equal(a, apply_condition(x, "phone"))
+
+
+def test_opus_round_trip_keeps_length_and_changes_the_signal():
+    import pytest
+    from voiceguard.channel import have_libopus, opus
+    if not have_libopus():
+        pytest.skip("ffmpeg with libopus not installed")
+    t = np.arange(16000) / 16000
+    x = (0.3 * np.sin(2 * np.pi * 220 * t) * (1 + 0.5 * np.sin(2 * np.pi * 3 * t))).astype(np.float32)
+    y = opus(x, 16)
+    assert y.shape == x.shape and y.dtype == np.float32
+    assert 0.0 < np.mean((y - x) ** 2) < np.mean(x ** 2)
+    assert np.array_equal(y, apply_condition(x, "opus16"))

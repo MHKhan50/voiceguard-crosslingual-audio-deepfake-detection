@@ -10,7 +10,7 @@ class FakeExtractor:
     def run(self, paths, condition):
         rng = np.random.default_rng(len(paths))
         y = np.array([1 if "S" in p.rsplit("/", 1)[-1] else 0 for p in paths])
-        noise = {"clean": 1.0, "phone": 2.0, "phone_noise15": 3.0}[condition]
+        noise = {"clean": 1.0, "phone": 2.0, "phone_noise15": 3.0, "opus16": 1.5}[condition]
         base = rng.standard_normal((len(paths), 8)) * noise + 2 * y[:, None]
         return {"wavlm_l3": base.astype(np.float16), "mfcc": (base[:, :4] * 0.5).astype(np.float32)}
 
@@ -35,6 +35,7 @@ def test_runner_end_to_end(tmp_path, monkeypatch):
     fake.Extractor = FakeExtractor
     monkeypatch.setitem(sys.modules, "voiceguard.extract", fake)
     from voiceguard import run_kaggle
+    monkeypatch.setattr(run_kaggle, "have_libopus", lambda: True)
     out = tmp_path / "out"
     monkeypatch.setattr(sys, "argv", ["run", "--data", str(tmp_path / "data"), "--out", str(out),
                                       "--cache", str(tmp_path / "cache"), "--eval-per-attack", "30",
@@ -67,6 +68,7 @@ def test_runner_reuses_features_from_earlier_run(tmp_path, monkeypatch):
     fake.Extractor = FakeExtractor
     monkeypatch.setitem(sys.modules, "voiceguard.extract", fake)
     from voiceguard import run_kaggle
+    monkeypatch.setattr(run_kaggle, "have_libopus", lambda: True)
     common = ["--data", str(tmp_path / "data"), "--eval-per-attack", "30", "--eval-bonafide", "30"]
     first = tmp_path / "earlier"
     monkeypatch.setattr(sys, "argv", ["run", "--out", str(first / "results"), "--cache", str(first / "features"),

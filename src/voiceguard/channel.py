@@ -1,6 +1,10 @@
-"""Simulated telephone channel: narrowband filter, 8 kHz, G.711-style mu-law, optional noise."""
+"""Channel conditions: simulated telephone line (narrowband, 8 kHz, G.711-style mu-law, optional noise) and a
+low-bitrate Opus round trip, the codec family used by voice-note and VoIP apps."""
 from __future__ import annotations
 
+import shutil
+import subprocess
+from functools import lru_cache
 from typing import Optional
 
 import numpy as np
@@ -41,7 +45,31 @@ def telephone(x: np.ndarray, snr_db: Optional[float] = None, seed: int = 0) -> n
     return y.astype(np.float32)
 
 
-CONDITIONS = {"clean": None, "phone": "phone", "phone_noise15": 15.0}
+@lru_cache(maxsize=1)
+def have_libopus() -> bool:
+    """True if an ffmpeg with the libopus encoder is on the PATH."""
+    if shutil.which("ffmpeg") is None:
+        return False
+    out = subprocess.run(["ffmpeg", "-hide_banner", "-encoders"], capture_output=True, text=True).stdout
+    return "libopus" in out
+
+
+def opus(x: np.ndarray, kbps: int = 16) -> np.ndarray:
+    """Encode a 16 kHz clip with libopus (VoIP mode, mono) and decode it back; output has the input's length."""
+    x = np.asarray(x, dtype=np.float32)
+    raw = ["-f", "f32le", "-ar", str(SR), "-ac", "1"]
+    enc = subprocess.run(["ffmpeg", "-hide_banner", "-loglevel", "error", *raw, "-i", "pipe:0", "-c:a", "libopus",
+                          "-b:a", "%dk" % kbps, "-application", "voip", "-f", "ogg", "pipe:1"],
+                         input=x.tobytes(), capture_output=True, check=True).stdout
+    dec = subprocess.run(["ffmpeg", "-hide_banner", "-loglevel", "error", "-i", "pipe:0", *raw, "pipe:1"],
+                         input=enc, capture_output=True, check=True).stdout
+    y = np.frombuffer(dec, dtype=np.float32)[: len(x)]
+    if len(y) < len(x):
+        y = np.pad(y, (0, len(x) - len(y)))
+    return y.astype(np.float32)
+
+
+CONDITIONS = {"clean": None, "phone": "phone", "phone_noise15": 15.0, "opus16": 16}
 
 
 def apply_condition(x: np.ndarray, condition: str, seed: int = 0) -> np.ndarray:
@@ -51,4 +79,6 @@ def apply_condition(x: np.ndarray, condition: str, seed: int = 0) -> np.ndarray:
         return telephone(x)
     if condition == "phone_noise15":
         return telephone(x, snr_db=15.0, seed=seed)
+    if condition == "opus16":
+        return opus(x, 16)
     raise ValueError("unknown condition: " + condition)
