@@ -122,7 +122,7 @@ def main() -> None:
 
     def feats(name, items, split, cond):
         nonlocal ext
-        fname = "%s%d_%s.npz" % (name, len(items), cond)
+        fname = "%s%d_%s_nopad.npz" % (name, len(items), cond)
         if os.path.exists(os.path.join(args.cache, fname)):
             return dict(np.load(os.path.join(args.cache, fname)))
         if reuse and os.path.exists(os.path.join(reuse, fname)):

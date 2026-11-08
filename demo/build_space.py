@@ -148,11 +148,11 @@ def main() -> None:
     if gap > 1e-3:
         sys.exit("head weights do not reproduce scikit-learn (max |dLLR| %.2e)" % gap)
 
-    # 2. Reference scores of the experiments: the saved eval features of the run (batched, float16 on GPU).
+    # 2. Reference scores of the experiments: the saved eval features of the run (unpadded batches, float16 on GPU).
     layer = recipe["hidden_state_index"]
-    feat_files = sorted(found[0].parent.parent.parent.rglob("eval%d_clean.npz" % len(manifest["eval"])))
+    feat_files = sorted(found[0].parent.parent.parent.rglob("eval%d_clean_nopad.npz" % len(manifest["eval"])))
     if not feat_files:
-        sys.exit("eval%d_clean.npz not found next to the model: add the VoiceGuard notebook output as input."
+        sys.exit("eval%d_clean_nopad.npz not found next to the model: add the VoiceGuard notebook output as input."
                  % len(manifest["eval"]))
     row = {u: i for i, u in enumerate(manifest["eval"])}
     ref_feats = np.load(feat_files[0])["wavlm_l%d" % layer][[row[u.utt_id] for u in check]].astype(np.float32)
@@ -209,8 +209,8 @@ def main() -> None:
     report["size_mb"] = {"fp32": round(onnx32.stat().st_size / 1e6, 1), "int8": round(onnx8.stat().st_size / 1e6, 1)}
     print("EER on check clips:", report["eer_on_check_clips"], "| sizes MB:", report["size_mb"], flush=True)
 
-    # Where do the single-clip demo scores and the batched experiment scores differ? In the experiments, shorter
-    # clips were zero-padded to the longest clip of their batch.
+    # Do the single-clip demo scores and the experiment scores differ by clip length? (Up to v0.3 the experiments
+    # zero-padded shorter clips to the longest clip of their batch; from v0.4 batches hold equal lengths.)
     secs = np.array([len(c) / 16000 for c in clips])
     gap = np.abs(llr32 - llr_batched)
     report["demo_vs_batched_by_length"] = []

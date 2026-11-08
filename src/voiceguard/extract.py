@@ -10,6 +10,7 @@ import torch
 import torchaudio
 from transformers import AutoModel
 
+from .batching import equal_length_batches
 from .channel import apply_condition
 
 MAX_SEC = 4.0
@@ -61,12 +62,17 @@ class Extractor:
     @torch.no_grad()
     def run(self, paths: List[str], condition: str, batch_size: int = 48,
             workers: int = 4) -> Dict[str, np.ndarray]:
-        dl = torch.utils.data.DataLoader(_Clips(paths, condition), batch_size=batch_size,
+        """Features in the order of `paths`. Batches hold clips of equal length, so nothing is zero-padded."""
+        lengths = [min(sf.info(p).frames, int(MAX_SEC * SR)) for p in paths]
+        batches = equal_length_batches(lengths, batch_size)
+        dl = torch.utils.data.DataLoader(_Clips(paths, condition), batch_sampler=batches,
                                          num_workers=workers, collate_fn=_collate)
         feats = {"wavlm_l%d" % l: [] for l in LAYERS}
         feats["mfcc"] = []
+        order: List[int] = []
         t0, done = time.time(), 0
-        for wav, mask in dl:
+        for b, (wav, mask) in enumerate(dl):
+            order.extend(batches[b])
             wav, mask = wav.to(self.device), mask.to(self.device)
             # normalise each clip over its real samples (as the WavLM feature extractor does)
             m = mask.float()
@@ -90,8 +96,9 @@ class Extractor:
             sd = torch.sqrt((((c - mu[..., None]) * cm) ** 2).sum(-1) / cm.sum(-1) + 1e-6)
             feats["mfcc"].append(torch.cat([mu, sd], 1).cpu().numpy().astype(np.float32))
             done += len(wav)
-            if done % (batch_size * 40) < batch_size:
+            if b % 200 == 0:
                 rate = done / (time.time() - t0)
                 print("  %s %d/%d clips, %.0f clips/s, ETA %.1f min" % (
                     condition, done, len(paths), rate, (len(paths) - done) / rate / 60), flush=True)
-        return {k: np.concatenate(v) for k, v in feats.items()}
+        inv = np.argsort(np.asarray(order))
+        return {k: np.concatenate(v)[inv] for k, v in feats.items()}
