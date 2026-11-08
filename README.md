@@ -53,7 +53,7 @@ python -m pytest -q
 ```
 The tests cover protocol parsing, the phone-line simulation, the metrics, the classifiers and a full mock run of the Kaggle runner with a fake feature extractor.
 
-### Results (Kaggle runs, 7 Nov 2026, GPU T4 x2, one seed; calibration columns from the v0.3 rerun)
+### Results (Kaggle runs, 7-8 Nov 2026, GPU T4 x2; calibration and seed results from the v0.3 reruns)
 Sample: 25,380 training clips, 2,020 dev clips, 9,800 eval clips (2,000 bona fide, 600 per attack), each eval clip in
 three conditions. Full tables: [`results/tables.md`](results/tables.md); all numbers: [`results/results.json`](results/results.json);
 clip IDs: [`results/manifest.json`](results/manifest.json).
@@ -70,7 +70,23 @@ EER % [bootstrap 95% CI], lower is better:
 | WavLM layer 9 + MLP | 4.1 [3.7, 4.5] | 6.4 [5.8, 7.1] | 11.7 [10.9, 12.5] |
 | WavLM layer 12 + logistic regression | 5.1 [4.7, 5.5] | 9.6 [8.9, 10.3] | 33.5 [32.5, 34.5] |
 
+Three classifier seeds (42, 43, 44; same clips and features). The table above is seed 42. EER % mean (sd):
+
+| Features + classifier | Clean | Phone line | Phone + noise 15 dB |
+|---|---|---|---|
+| MFCC + MLP | 15.8 (0.7) | 37.1 (3.6) | 49.5 (0.7) |
+| WavLM layer 3 + MLP | 2.0 (0.6) | 9.4 (2.4) | 29.4 (5.6) |
+| **WavLM layer 6 + MLP** | **1.7 (0.1)** | **2.2 (0.2)** | **8.0 (1.2)** |
+| WavLM layer 9 + MLP | 4.0 (0.2) | 6.3 (0.8) | 9.8 (2.3) |
+| WavLM layer 12 + MLP | 5.6 (0.2) | 6.8 (0.5) | 30.1 (8.0) |
+
+Logistic regression is fitted deterministically, so its results are identical across seeds (sd 0). Three seeds give
+only a rough spread; per-seed values are in `results/results.json` (`seed_summary`).
+
 What the run shows:
+- **Single MLP runs are unreliable under shift.** On clean audio the MLP seeds agree closely, but with noise the EER
+  of layer 12 + MLP ranged from 20.9% to 35.9% across seeds and layer 3 + MLP from 24.1% to 35.2%. Layer 6 + MLP
+  stayed between 7.1% and 9.3%; the seed-42 value reported in v0.2 (9.3%) was the highest of the three.
 - **The layer matters more than the classifier under shift.** Layer 3 and layer 6 are close on clean audio
   (1.9% and 1.8% with the MLP), but on the phone line layer 3 rises to 12.0% while layer 6 stays at 2.0%.
   With noise, layers 3 and 12 reach 25-36% while layers 6 and 9 stay at 9-13%.
@@ -109,7 +125,7 @@ Full calibration table for all models: [`results/tables.md`](results/tables.md#c
 ### Limitations of this baseline
 - One English corpus; the cross-lingual question needs MLAAD or another multilingual set after a licence and content audit.
 - The phone line is simulated, not recorded over a real network.
-- One seed per classifier in this first run.
+- Three classifier seeds, but one clip sample and one feature extraction; the sd does not cover sampling variation.
 - Calibration is fitted on clean dev audio only; it does not transfer to the noisy phone line (see Cllr above).
 - Accuracy-type errors depend on the 80% spoof share of the eval sample; EER is the main measure.
 

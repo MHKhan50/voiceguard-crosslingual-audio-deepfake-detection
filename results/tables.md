@@ -69,3 +69,40 @@ Cllr and minCllr in bits (lower is better) do not depend on the class mix. ECE c
 | wavlm_l9+mlp | Clean | 0.270 | 0.166 | 0.104 | 0.016 | 0.042 | 0.028 |
 | wavlm_l9+mlp | Phone line | 0.365 | 0.253 | 0.112 | 0.072 | 0.017 | 0.025 |
 | wavlm_l9+mlp | Phone + noise 15 dB | 1.357 | 0.431 | 0.926 | 0.191 | 0.081 | 0.126 |
+
+## Classifier seeds
+
+Same clips and features; only the classifier seed changes (42, 43, 44). The tables above use seed 42. sd is the sample standard deviation over seeds. Logistic regression is fitted deterministically, so its sd is expected to be zero; the MLP seed sets its initial weights and early-stopping split.
+
+| Features + classifier | Condition | EER % mean (sd) | Cllr mean (sd) | minCllr mean (sd) | ECE mean (sd) |
+|---|---|---|---|---|---|
+| mfcc+logreg | Clean | 18.13 (0.00) | 0.676 (0.000) | 0.560 (0.000) | 0.012 (0.000) |
+| mfcc+logreg | Phone line | 50.60 (0.00) | 3.459 (0.000) | 0.974 (0.000) | 0.199 (0.000) |
+| mfcc+logreg | Phone + noise 15 dB | 38.63 (0.00) | 1.137 (0.000) | 0.890 (0.000) | 0.120 (0.000) |
+| mfcc+mlp | Clean | 15.82 (0.65) | 0.698 (0.006) | 0.519 (0.012) | 0.054 (0.002) |
+| mfcc+mlp | Phone line | 37.12 (3.60) | 1.886 (0.219) | 0.912 (0.032) | 0.180 (0.008) |
+| mfcc+mlp | Phone + noise 15 dB | 49.46 (0.72) | 2.234 (0.206) | 0.995 (0.003) | 0.191 (0.004) |
+| wavlm_l12+logreg | Clean | 5.14 (0.00) | 0.267 (0.000) | 0.189 (0.000) | 0.030 (0.000) |
+| wavlm_l12+logreg | Phone line | 9.61 (0.00) | 1.094 (0.000) | 0.317 (0.000) | 0.087 (0.000) |
+| wavlm_l12+logreg | Phone + noise 15 dB | 33.53 (0.00) | 3.252 (0.000) | 0.497 (0.000) | 0.195 (0.000) |
+| wavlm_l12+mlp | Clean | 5.58 (0.15) | 0.437 (0.032) | 0.202 (0.006) | 0.058 (0.005) |
+| wavlm_l12+mlp | Phone line | 6.77 (0.47) | 0.405 (0.041) | 0.249 (0.014) | 0.037 (0.004) |
+| wavlm_l12+mlp | Phone + noise 15 dB | 30.13 (8.04) | 3.194 (0.365) | 0.642 (0.121) | 0.199 (0.004) |
+| wavlm_l3+logreg | Clean | 3.32 (0.00) | 0.371 (0.000) | 0.123 (0.000) | 0.048 (0.000) |
+| wavlm_l3+logreg | Phone line | 16.80 (0.00) | 1.121 (0.000) | 0.543 (0.000) | 0.080 (0.000) |
+| wavlm_l3+logreg | Phone + noise 15 dB | 25.51 (0.00) | 4.433 (0.000) | 0.710 (0.000) | 0.542 (0.000) |
+| wavlm_l3+mlp | Clean | 2.02 (0.64) | 0.171 (0.026) | 0.081 (0.023) | 0.010 (0.003) |
+| wavlm_l3+mlp | Phone line | 9.38 (2.38) | 0.420 (0.072) | 0.317 (0.065) | 0.028 (0.006) |
+| wavlm_l3+mlp | Phone + noise 15 dB | 29.36 (5.58) | 1.538 (0.303) | 0.783 (0.084) | 0.161 (0.074) |
+| wavlm_l6+logreg | Clean | 2.65 (0.00) | 0.226 (0.000) | 0.099 (0.000) | 0.024 (0.000) |
+| wavlm_l6+logreg | Phone line | 3.28 (0.00) | 0.228 (0.000) | 0.128 (0.000) | 0.018 (0.000) |
+| wavlm_l6+logreg | Phone + noise 15 dB | 9.79 (0.00) | 0.548 (0.000) | 0.345 (0.000) | 0.058 (0.000) |
+| wavlm_l6+mlp | Clean | 1.73 (0.06) | 0.221 (0.036) | 0.066 (0.001) | 0.028 (0.005) |
+| wavlm_l6+mlp | Phone line | 2.18 (0.18) | 0.124 (0.009) | 0.087 (0.005) | 0.010 (0.001) |
+| wavlm_l6+mlp | Phone + noise 15 dB | 7.97 (1.16) | 0.565 (0.106) | 0.299 (0.038) | 0.052 (0.012) |
+| wavlm_l9+logreg | Clean | 3.90 (0.00) | 0.222 (0.000) | 0.148 (0.000) | 0.024 (0.000) |
+| wavlm_l9+logreg | Phone line | 5.10 (0.00) | 0.346 (0.000) | 0.193 (0.000) | 0.028 (0.000) |
+| wavlm_l9+logreg | Phone + noise 15 dB | 13.02 (0.00) | 1.638 (0.000) | 0.401 (0.000) | 0.120 (0.000) |
+| wavlm_l9+mlp | Clean | 3.96 (0.22) | 0.272 (0.004) | 0.155 (0.010) | 0.033 (0.004) |
+| wavlm_l9+mlp | Phone line | 6.28 (0.83) | 0.353 (0.041) | 0.239 (0.033) | 0.025 (0.003) |
+| wavlm_l9+mlp | Phone + noise 15 dB | 9.76 (2.25) | 1.093 (0.531) | 0.355 (0.079) | 0.087 (0.043) |

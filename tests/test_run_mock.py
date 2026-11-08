@@ -78,3 +78,5 @@ def test_runner_reuses_features_from_earlier_run(tmp_path, monkeypatch):
     first.rename(tmp_path / "earlier_parent" / "earlier")
     run_kaggle.main()
     assert (tmp_path / "new" / "results.json").exists()
+    assert sorted(p.name for p in (tmp_path / "cache2").iterdir()) == sorted(
+        p.name for p in (tmp_path / "earlier_parent" / "earlier" / "features").iterdir())
