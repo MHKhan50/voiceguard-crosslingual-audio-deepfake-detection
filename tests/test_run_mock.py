@@ -48,6 +48,11 @@ def test_runner_end_to_end(tmp_path, monkeypatch):
     assert (out / "fig_eer_by_condition.png").exists() and (out / "manifest.json").exists()
     assert 0 <= r["clean"]["min_cllr"] <= r["clean"]["cllr"] + 1e-9
     assert "## Calibration" in (out / "tables.md").read_text()
+    assert res["classifier_seeds"] == [42, 43, 44]
+    sm = res["seed_summary"]["wavlm_l3+mlp"]["clean"]["eer"]
+    assert len(sm["values"]) == 3 and sm["min"] <= sm["mean"] <= sm["max"]
+    assert res["seed_summary"]["wavlm_l3+logreg"]["clean"]["eer"]["std"] < 1e-12
+    assert "## Classifier seeds" in (out / "tables.md").read_text()
 
 
 def test_runner_reuses_features_from_earlier_run(tmp_path, monkeypatch):

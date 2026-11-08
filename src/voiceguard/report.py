@@ -36,12 +36,30 @@ def calibration_table(results: Dict) -> str:
     return "\n".join(rows)
 
 
+def seed_table(results: Dict) -> str:
+    rows = ["| Features + classifier | Condition | EER % mean (sd) | Cllr mean (sd) | minCllr mean (sd) | ECE mean (sd) |",
+            "|---|---|---|---|---|---|"]
+    for key, r in results["seed_summary"].items():
+        for c, m in r.items():
+            rows.append("| %s | %s | %.2f (%.2f) | %.3f (%.3f) | %.3f (%.3f) | %.3f (%.3f) |" % (
+                key, COND_LABEL[c], 100 * m["eer"]["mean"], 100 * m["eer"]["std"], m["cllr"]["mean"],
+                m["cllr"]["std"], m["min_cllr"]["mean"], m["min_cllr"]["std"], m["ece"]["mean"], m["ece"]["std"]))
+    return "\n".join(rows)
+
+
 def write_report(results: Dict, out: str) -> None:
     with open(os.path.join(out, "tables.md"), "w") as fh:
         fh.write("# VoiceGuard baseline results\n\n" + table(results) + "\n")
         fh.write("\n## Calibration\n\nCllr and minCllr in bits (lower is better) do not depend on the class mix. "
                  "ECE columns: raw classifier output, Platt fitted on dev (v0.2 method), and the LLR calibrator "
                  "at the eval sample's spoof share.\n\n" + calibration_table(results) + "\n")
+        if results.get("seed_summary"):
+            seeds = results.get("classifier_seeds", [])
+            fh.write("\n## Classifier seeds\n\nSame clips and features; only the classifier seed changes (%s). "
+                     "The tables above use seed %s. sd is the sample standard deviation over seeds. Logistic regression "
+                     "is fitted deterministically, so its sd is expected to be zero; the MLP seed sets its initial "
+                     "weights and early-stopping split.\n\n" % (", ".join(map(str, seeds)), seeds[0] if seeds else "?")
+                     + seed_table(results) + "\n")
     keys = list(results["runs"])
     conds = list(COND_LABEL)
     x = np.arange(len(keys))

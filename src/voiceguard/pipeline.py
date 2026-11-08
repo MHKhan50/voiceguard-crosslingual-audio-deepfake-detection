@@ -115,3 +115,19 @@ def majority_baseline(train_y, eval_y) -> Dict[str, float]:
     p = float(np.mean(train_y))
     probs = np.full(len(eval_y), p)
     return {"eer": 0.5, "brier": M.brier(eval_y, probs), "accuracy": float(np.mean(np.asarray(eval_y) == int(p >= 0.5)))}
+
+
+SEED_METRICS = ("eer", "eer_unseen_attacks", "auc", "cllr", "min_cllr", "ece", "brier")
+
+
+def summarise_seeds(per_seed: Dict[int, Dict]) -> Dict:
+    """per_seed: seed -> run_experiment output. Returns condition -> metric -> mean, std (n-1), min, max, values."""
+    seeds = sorted(per_seed)
+    out: Dict = {}
+    for cond in per_seed[seeds[0]]:
+        out[cond] = {}
+        for m in SEED_METRICS:
+            v = np.array([per_seed[s][cond][m] for s in seeds], dtype=float)
+            out[cond][m] = {"mean": float(v.mean()), "std": float(v.std(ddof=1)) if len(v) > 1 else 0.0,
+                            "min": float(v.min()), "max": float(v.max()), "values": [float(x) for x in v]}
+    return out

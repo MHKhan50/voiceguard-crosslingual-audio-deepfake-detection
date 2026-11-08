@@ -42,7 +42,9 @@ def main() -> None:
     ap.add_argument("--eval-per-attack", type=int, default=600)
     ap.add_argument("--eval-bonafide", type=int, default=2000)
     ap.add_argument("--train-limit", type=int, default=0, help="0 = all training clips")
-    ap.add_argument("--seed", type=int, default=42)
+    ap.add_argument("--seed", type=int, default=42, help="seed for the clip sample (keeps features reusable)")
+    ap.add_argument("--clf-seeds", default="42,43,44",
+                    help="comma-separated classifier seeds; the first one fills the main tables")
     ap.add_argument("--reuse-from", default="/kaggle/input",
                     help="search here for features saved by an earlier run with the same clip IDs")
     args = ap.parse_args()
@@ -103,19 +105,23 @@ def main() -> None:
                "calibration": "affine LLR map fitted on dev with equal class weights; posterior at the eval "
                               "sample's spoof share (target_prior); Platt on dev kept as ece_platt_dev",
                "majority_baseline": pipeline.majority_baseline(ytr, yev), "runs": {}}
+    clf_seeds = [int(x) for x in args.clf_seeds.split(",") if x.strip()]
+    results["seed_summary"] = {}
     for feat in sorted(F["train"]):
         for kind in ("logreg", "mlp"):
             key = "%s+%s" % (feat, kind)
             sets = {c: {"x": F["eval_" + c][feat].astype(np.float32), "y": yev, "attacks": atk}
                     for c in CONDITIONS}
-            results["runs"][key] = pipeline.run_experiment(
+            per_seed = {s: pipeline.run_experiment(
                 F["train"][feat].astype(np.float32), ytr, F["dev"][feat].astype(np.float32), ydv,
-                sets, kind, KNOWN_ATTACKS, args.seed)
-            r = results["runs"][key]
-            print("%-16s EER clean %.1f%%  phone %.1f%%  phone+noise %.1f%%  Cllr clean %.3f" % (
-                key, 100 * r["clean"]["eer"], 100 * r["phone"]["eer"], 100 * r["phone_noise15"]["eer"],
-                r["clean"]["cllr"]),
-                flush=True)
+                sets, kind, KNOWN_ATTACKS, s) for s in clf_seeds}
+            results["runs"][key] = per_seed[clf_seeds[0]]
+            results["seed_summary"][key] = pipeline.summarise_seeds(per_seed)
+            sm = results["seed_summary"][key]
+            print("%-16s EER %% mean (sd) over %d seeds: clean %.1f (%.2f)  phone %.1f (%.2f)  phone+noise %.1f (%.2f)" % (
+                key, len(clf_seeds), *[x for c in CONDITIONS for x in
+                                       (100 * sm[c]["eer"]["mean"], 100 * sm[c]["eer"]["std"])]), flush=True)
+    results["classifier_seeds"] = clf_seeds
     results["minutes"] = round((time.time() - t_start) / 60, 1)
     with open(os.path.join(args.out, "results.json"), "w") as fh:
         json.dump(results, fh, indent=1)
