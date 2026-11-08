@@ -35,6 +35,47 @@ def find_reusable_features(root: str, ids: dict) -> str:
     return ""
 
 
+def export_model(key: str, F: dict, ytr, ydv, yev, seed: int, results: dict, out_dir: str) -> None:
+    """Refit one classifier exactly as in the run, check it reproduces the reported EER, and save it."""
+    import platform
+
+    import joblib
+    import sklearn
+
+    from . import metrics as M
+    feat, kind = key.split("+")
+    if feat not in F["train"]:
+        print("export skipped: no features named", feat)
+        return
+    model = pipeline.make_model(kind, seed).fit(F["train"][feat].astype(np.float32), ytr)
+    cal = pipeline.LLRCalibrator().fit(model.predict_proba(F["dev"][feat].astype(np.float32))[:, 1], ydv)
+    eer_clean = M.eer(yev, model.predict_proba(F["eval_clean"][feat].astype(np.float32))[:, 1])
+    reported = results["runs"][key]["clean"]["eer"]
+    os.makedirs(out_dir, exist_ok=True)
+    layer = int(feat.split("_l")[1]) if feat.startswith("wavlm_l") else None
+    card = {
+        "name": "voiceguard_" + key.replace("+", "_"),
+        "features": feat, "classifier": kind, "seed": seed,
+        "feature_recipe": {"wavlm_model": "microsoft/wavlm-base-plus", "hidden_state_index": layer,
+                           "sample_rate": 16000, "max_seconds": 4.0,
+                           "waveform_norm": "zero mean, unit variance per clip",
+                           "pooling": "mean over frames (one frame per 320 samples)",
+                           "extraction_precision": "float16 on GPU"},
+        "training_data": "ASVspoof 2019 LA train (all 25,380 clips, clean audio); calibration on 2,020 dev clips",
+        "output": "calibrated log-likelihood ratio (spoof vs bona fide); posterior = sigmoid(llr + logit(prior))",
+        "eval_clean_eer_check": {"refit": eer_clean, "reported": reported,
+                                 "match": bool(abs(eer_clean - reported) < 1e-9)},
+        "eval_prior_in_paper_sample": float(np.mean(yev)),
+        "versions": {"python": platform.python_version(), "numpy": np.__version__,
+                     "scikit-learn": sklearn.__version__},
+    }
+    joblib.dump({"model": model, "calibrator": cal, "card": card},
+                os.path.join(out_dir, card["name"] + ".joblib"))
+    with open(os.path.join(out_dir, "model_card.json"), "w") as fh:
+        json.dump(card, fh, indent=1)
+    print("exported %s (clean EER refit %.4f, reported %.4f) to %s" % (key, eer_clean, reported, out_dir))
+
+
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--data", default="/kaggle/input")
@@ -46,6 +87,8 @@ def main() -> None:
     ap.add_argument("--seed", type=int, default=42, help="seed for the clip sample (keeps features reusable)")
     ap.add_argument("--clf-seeds", default="42,43,44",
                     help="comma-separated classifier seeds; the first one fills the main tables")
+    ap.add_argument("--export", default="wavlm_l6+mlp",
+                    help="features+classifier to retrain with the first seed and save for the demo ('' = none)")
     ap.add_argument("--reuse-from", default="/kaggle/input",
                     help="search here for features saved by an earlier run with the same clip IDs")
     args = ap.parse_args()
@@ -125,6 +168,8 @@ def main() -> None:
                 key, len(clf_seeds), *[x for c in CONDITIONS for x in
                                        (100 * sm[c]["eer"]["mean"], 100 * sm[c]["eer"]["std"])]), flush=True)
     results["classifier_seeds"] = clf_seeds
+    if args.export:
+        export_model(args.export, F, ytr, ydv, yev, clf_seeds[0], results, os.path.join(args.out, "model"))
     results["minutes"] = round((time.time() - t_start) / 60, 1)
     with open(os.path.join(args.out, "results.json"), "w") as fh:
         json.dump(results, fh, indent=1)

@@ -38,7 +38,8 @@ def test_runner_end_to_end(tmp_path, monkeypatch):
     out = tmp_path / "out"
     monkeypatch.setattr(sys, "argv", ["run", "--data", str(tmp_path / "data"), "--out", str(out),
                                       "--cache", str(tmp_path / "cache"), "--eval-per-attack", "30",
-                                      "--eval-bonafide", "30", "--reuse-from", ""])
+                                      "--eval-bonafide", "30", "--reuse-from", "",
+                                      "--export", "wavlm_l3+mlp"])
     run_kaggle.main()
     res = json.loads((out / "results.json").read_text())
     assert res["counts"]["eval"] == 90
@@ -53,6 +54,11 @@ def test_runner_end_to_end(tmp_path, monkeypatch):
     assert len(sm["values"]) == 3 and sm["min"] <= sm["mean"] <= sm["max"]
     assert res["seed_summary"]["wavlm_l3+logreg"]["clean"]["eer"]["std"] < 1e-12
     assert "## Classifier seeds" in (out / "tables.md").read_text()
+    import joblib
+    card = json.loads((out / "model" / "model_card.json").read_text())
+    assert card["eval_clean_eer_check"]["match"] and card["feature_recipe"]["hidden_state_index"] == 3
+    bundle = joblib.load(out / "model" / (card["name"] + ".joblib"))
+    assert bundle["calibrator"].llr(np.array([0.2, 0.8])).shape == (2,)
 
 
 def test_runner_reuses_features_from_earlier_run(tmp_path, monkeypatch):
