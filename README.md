@@ -53,7 +53,7 @@ python -m pytest -q
 ```
 The tests cover protocol parsing, the phone-line simulation, the metrics, the classifiers and a full mock run of the Kaggle runner with a fake feature extractor.
 
-### Results (Kaggle run, 7 Nov 2026, GPU T4 x2, one seed)
+### Results (Kaggle runs, 7 Nov 2026, GPU T4 x2, one seed; calibration columns from the v0.3 rerun)
 Sample: 25,380 training clips, 2,020 dev clips, 9,800 eval clips (2,000 bona fide, 600 per attack), each eval clip in
 three conditions. Full tables: [`results/tables.md`](results/tables.md); all numbers: [`results/results.json`](results/results.json);
 clip IDs: [`results/manifest.json`](results/manifest.json).
@@ -82,9 +82,26 @@ What the run shows:
 - **Abstention helps only when the model is uncertain in the right places.** For layer 6 + MLP with noise, the error
   falls from 10.7% on all clips to 5.7% on the 80% it is most confident about and 3.3% at 50%. For layer 3 + logistic
   regression with noise, the error stays between 58% and 65% at every coverage: the model is confidently wrong.
-- **Calibration fitted on dev did not transfer.** For layer 6 + MLP, ECE on clean eval was 0.004 before and 0.048
-  after Platt scaling. A likely reason is the class mix: the dev sample is about half spoof, the eval sample 80% spoof.
-  This is a design issue to fix, not a property of the model.
+- **Calibration (v0.3 rerun, same features and classifiers, so the EERs above are unchanged).** In v0.2, Platt
+  scaling fitted on dev made clean ECE worse for layer 6 + MLP (0.004 before, 0.048 after), and the dev sample's class
+  mix (about half spoof, against 80% in eval) looked like the cause. v0.3 maps scores to log-likelihood ratios on dev
+  with equal class weights and then applies the eval sample's spoof share. This gave lower ECE than Platt in only 16 of
+  30 model and condition pairs; for layer 6 + MLP on clean audio it gave 0.034, still above the uncalibrated 0.004. So
+  the class mix explains only part of the problem.
+- **The larger calibration problem is the channel.** Cllr measures the cost of the scores as evidence (in bits;
+  0 is perfect, 1 equals always saying "I don't know") and minCllr is the same after the best possible recalibration.
+  In 12 of 30 pairs Cllr was above 1, including every WavLM model with noise except layer 6, while minCllr stayed
+  much lower: for layer 12 + logistic regression with noise, Cllr 3.25 against minCllr 0.50. The scores still rank
+  clips reasonably, but a calibration fitted on clean dev audio is far too confident on the noisy phone line.
+
+| Layer 6 model | Condition | Cllr | minCllr | ECE raw | ECE Platt (dev) | ECE LLR (v0.3) |
+|---|---|---|---|---|---|---|
+| MLP | Clean | 0.263 | 0.066 | 0.004 | 0.048 | 0.034 |
+| MLP | Phone line | 0.118 | 0.081 | 0.018 | 0.015 | 0.010 |
+| MLP | Phone + noise 15 dB | 0.685 | 0.340 | 0.082 | 0.077 | 0.066 |
+| Logistic regression | Phone + noise 15 dB | 0.548 | 0.345 | 0.070 | 0.062 | 0.058 |
+
+Full calibration table for all models: [`results/tables.md`](results/tables.md#calibration).
 
 ![EER by condition](results/fig_eer_by_condition.png)
 ![EER per attack](results/fig_eer_per_attack.png)
@@ -93,7 +110,7 @@ What the run shows:
 - One English corpus; the cross-lingual question needs MLAAD or another multilingual set after a licence and content audit.
 - The phone line is simulated, not recorded over a real network.
 - One seed per classifier in this first run.
-- The dev sample used for calibration has a different bona fide to spoof ratio from the eval sample.
+- Calibration is fitted on clean dev audio only; it does not transfer to the noisy phone line (see Cllr above).
 - Accuracy-type errors depend on the 80% spoof share of the eval sample; EER is the main measure.
 
 ## Hardware
