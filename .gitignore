@@ -1,0 +1,3 @@
+demo/model/*.joblib
+__pycache__/
+.venv/

@@ -10,6 +10,10 @@ AI-generated and cloned speech can support impersonation and social-engineering 
 ## Proposed application
 A Hugging Face demo where a user uploads a short audio clip and receives a risk estimate (likely bona-fide / likely synthetic or manipulated / uncertain), calibrated confidence, audio-quality warnings, and limitations. It must not claim forensic certainty or replace bank or law-enforcement checks.
 
+## Demo
+A research demo of the layer 6 + MLP model (upload or record a clip; it is also checked over a simulated phone line)
+runs as a Hugging Face Space. Its source is in [`demo/`](demo/); the model file is stored in the Space, not in git.
+
 ## Proposed contribution
 Study generator-disjoint generalisation, cross-language variation, telephone-channel degradation, calibration and selective abstention, and resource-efficient inference. Novelty is not established: a systematic literature review and data audit must precede any novelty claim.
 
