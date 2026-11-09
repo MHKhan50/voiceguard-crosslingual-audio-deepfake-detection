@@ -87,7 +87,7 @@
       <div class="card">
         <h3>How well it works</h3>
         <ul>
-          <li>Equal error rate in the experiments (ASVspoof 2019 LA eval sample, 9,800 clips): 1.8% clean, 2.0% over a simulated phone line, 9.3% with added noise.</li>
+          <li>Equal error rate in the experiments (ASVspoof 2019 LA eval sample, 9,800 clips): 2.1% clean, 2.2% over a simulated phone line, 9.5% with added noise, 2.4% after low-bitrate Opus.</li>
           <li>On {n_check} check clips, this browser model ({precision}) gave an equal error rate of {eer_demo}% (experiment pipeline: {eer_batched}%), and the same verdict as the experiment pipeline on {agree}% of clips (float32).</li>
         </ul>
       </div>
@@ -95,6 +95,7 @@
         <h3>Limitations</h3>
         <ul>
           <li>Trained on English speech and on spoofing systems from 2019. Recent voice-cloning tools, other languages, music and strong noise can fool it.</li>
+          <li>Real voices sent as messaging-app voice notes or played through a loudspeaker can be flagged as AI-generated: in the author's own tests a real WhatsApp voice note scored 97.4%.</li>
           <li>Calibration fitted on clean audio is over-confident on noisy phone audio.</li>
           <li>Your browser resamples the audio, which can shift scores slightly for files that are not 16 kHz.</li>
         </ul>

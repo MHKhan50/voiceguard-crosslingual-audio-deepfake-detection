@@ -1,7 +1,7 @@
 cff-version: 1.2.0
 message: "If you use this software, please cite it as below."
 title: "VoiceGuard: speech deepfake detection under phone-line conditions"
-version: 0.2.0
+version: 0.4.0
 date-released: 2026-11-06
 repository-code: "https://github.com/MHKhan50/voiceguard-crosslingual-audio-deepfake-detection"
 authors:
