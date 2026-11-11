@@ -181,6 +181,8 @@ clip, 61% of clips are shorter). Nothing is tuned on it. Code: `src/voiceguard/e
 Local machine: MacBook with Apple M4 and 16 GB unified memory. Feature extraction runs on a Kaggle GPU; local work is limited to tests and analysis.
 
 ## Citation
+Paper (preprint, Zenodo): M. Hussain, *When the Channel Changes: Layer Choice, Calibration Transfer and a Padding Pitfall in Frozen-WavLM Speech Deepfake Detection*, 2026. [doi:10.5281/zenodo.24141726](https://doi.org/10.5281/zenodo.24141726). Source in [`paper/`](paper/).
+
 Software archive (v0.5.0) on Zenodo: [doi:10.5281/zenodo.24139946](https://doi.org/10.5281/zenodo.24139946). Citation metadata: [`CITATION.cff`](CITATION.cff).
 
 ## Licence
