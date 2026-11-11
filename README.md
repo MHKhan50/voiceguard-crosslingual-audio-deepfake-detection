@@ -180,5 +180,8 @@ clip, 61% of clips are shorter). Nothing is tuned on it. Code: `src/voiceguard/e
 ## Hardware
 Local machine: MacBook with Apple M4 and 16 GB unified memory. Feature extraction runs on a Kaggle GPU; local work is limited to tests and analysis.
 
+## Citation
+Software archive (v0.5.0) on Zenodo: [doi:10.5281/zenodo.24139946](https://doi.org/10.5281/zenodo.24139946). Citation metadata: [`CITATION.cff`](CITATION.cff).
+
 ## Licence
 Code: MIT (see [`LICENSE`](LICENSE)). The ASVspoof 2019 and In-the-Wild audio are not included and remain under their own licences.
