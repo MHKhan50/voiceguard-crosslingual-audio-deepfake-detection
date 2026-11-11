@@ -120,7 +120,7 @@ What the run shows:
   regression with noise, the error stays between 45% and 51% at every coverage: the model is confidently wrong.
 - **Calibration does not transfer to the noisy phone line.** Cllr is the cost of the scores as evidence (in bits; 0
   is perfect, 1 equals always answering "I don't know") and minCllr is the same after the best possible recalibration.
-  In 12 of 40 model and condition pairs Cllr was above 1, including five of the eight WavLM models with noise (all
+  In 12 of 40 model and condition pairs (seed 42; 11 of 40 for the mean over seeds, as in the paper) Cllr was above 1, including five of the eight WavLM models with noise (all
   except layer 6 with either classifier and layer 3 + MLP at 0.97), while
   minCllr stayed much lower: for layer 12 + MLP with noise, Cllr 3.49 against minCllr 0.64. The scores still rank clips
   reasonably, but a calibration fitted on clean dev audio is far too confident on the noisy line. The log-likelihood

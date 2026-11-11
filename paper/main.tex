@@ -136,7 +136,7 @@ C_\mathrm{llr} = \frac{1}{2\ln 2}\left[\frac{1}{N_s}\sum_{i\in s}\ln\!\left(1+e^
 \end{equation}
 in bits, where $s$ and $b$ are the spoof and bona fide trials \cite{brummer2006application}. A system that always
 outputs $\ell=0$ has $C_\mathrm{llr}=1$; larger values mean the scores are worse than no evidence. $\min C_\mathrm{llr}$
-is the same cost after the best monotonic recalibration (pool-adjacent-violators) and measures discrimination only.
+is the same cost after the best monotonic recalibration (pool-adjacent-violators) and measures discrimination only; because it is fitted on the test labels, it is an optimistic bound on what any recalibration could reach.
 We also report the expected calibration error (ECE, 15 bins) \cite{guo2017calibration} and compare our calibrator
 with Platt scaling \cite{platt1999probabilistic}. Unless a single seed is stated, numbers are means over the three
 classifier seeds.
@@ -159,9 +159,8 @@ Opus at 16\,kbps costs little on this data: layer 6 with the MLP goes from 1.7\%
 the hardest condition for every model. Single MLP runs can mislead under noise: across the three seeds, layer 12
 ranged from 23.1\% to 32.6\% and layer 3 from 22.1\% to 24.6\%, whereas layer 6 stayed between 6.8\% and 9.5\%.
 
-On In-the-Wild, every model degrades sharply, but the ranking holds. Layer 6 is the best layer with either classifier
-(18.0\% and 18.1\%), layers 9 and 12 reach 23--29\%, and the MFCC models are worse than chance (AUC 0.29 and 0.44),
-which means they rank real clips as more fake than the fakes. Layer 3 with the MLP is competitive on average (20.7\%)
+On In-the-Wild, every model degrades sharply, but the ranking holds. Layer 6 is the best layer with either classifier (18.0\% and 18.1\%; with the MLP it beats layer 3 in each of the three seeds), layers 9 and 12 reach 23--29\%, and the MFCC models are worse than chance (AUC 0.29 and 0.44),
+which means they rank real clips as more fake than the fakes. These numbers describe a deliberately small, frozen recipe; systems with larger or fine-tuned front ends and data augmentation are expected to do better on In-the-Wild \cite{pascu2024towards,tak2022automatic}, and we do not compare with them directly. Layer 3 with the MLP is competitive on average (20.7\%)
 but varies most across seeds (sd 3.5 points).
 
 \begin{table}[t]
@@ -206,8 +205,7 @@ layer 12 with the MLP under noise, Cllr is 3.59 against a minCllr of 0.57. The s
 map from scores to evidence, fitted on clean development audio, is far too confident on the noisy line.
 
 On In-the-Wild, Cllr exceeds 1 for 7 of the 8 WavLM models; only layer 3 with the MLP stays just below (0.96). Layer 6
-has the lowest minCllr (0.59 with both classifiers) but Cllr of 1.33 and 1.38. In terms of the posterior at the true
-spoof share of In-the-Wild (0.37), layer 3 with the MLP has the lowest ECE (0.114), followed by layer 6 with the MLP
+has the lowest minCllr (0.59 with both classifiers) but Cllr of 1.33 and 1.38. In terms of the posterior at the true spoof share of In-the-Wild (0.37, an oracle choice that favours every calibrator), layer 3 with the MLP has the lowest ECE (0.114), followed by layer 6 with the MLP
 (0.162). Comparing calibrators on ASVspoof (seed 42), the equal-weight LLR map gave a lower ECE than Platt scaling
 fitted on the same development data in 25 of 40 pairs.
 
@@ -247,7 +245,7 @@ new domain thus falls mostly on genuine speakers.
 
 \begin{table}[t]
 \centering
-\caption{In-the-Wild with decisions fixed in advance (seed 42). Left: threshold at the ASVspoof development EER
+\caption{In-the-Wild with decisions fixed in advance (seed 42; seven of the ten models, all ten are in the released tables). Left: threshold at the ASVspoof development EER
 point. Right: the three-way demo rule ($\sigma(\ell)\ge0.95$ fake, $\le0.05$ real, else uncertain). All values in \%.}
 \label{tab:itw}
 \small
@@ -275,8 +273,7 @@ clip of its batch of 48. We found the effect while checking the browser demo, wh
 time, against the experiment features on 920 evaluation clips (400 bona fide and 40 per attack). Figure~\ref{fig:pad}
 shows that the gap grows as clips get shorter: the mean absolute LLR difference was 0.01 for clips cut at 4\,s (never
 padded), 0.41 for 3--4\,s, 1.07 for 2--3\,s and 2.98 below 2\,s, and the three-way verdict agreed on 100\%, 99.1\%,
-96.8\% and 89.0\% of them. After switching to batches of equal length, the demo and the experiments agreed on every
-verdict and the mean difference was about 0.01 in every length group. The headline numbers moved by at most a few
+96.8\% and 89.0\% of them. After switching to batches of equal length, the demo and the experiments agreed on every verdict and the mean difference was about 0.01 in every length group; the parity report is published with the demo. The headline numbers moved by at most a few
 points (layer 6 with the MLP, clean, seed 42: 1.8\% before and 2.1\% after), and the conclusions above hold in both
 versions. The issue matters more for real-world data: 61\% of In-the-Wild clips are shorter than 4\,s and would have
 been padded.
@@ -308,6 +305,8 @@ In-the-Wild. Second, calibration should be checked under the target channel: min
 under shift is calibration, which could in principle be repaired with a small amount of matched data, whereas a clean
 EER says nothing about it. Third, the first failure that users meet is a false alarm on genuine speech, which argues
 for an explicit ``uncertain'' outcome and for reporting both error rates at a fixed threshold.
+
+A detector of this kind should not be used on its own to accuse a person of using a synthetic voice: with the error pattern above, a genuine speaker on an unfamiliar channel is the most likely victim of a wrong verdict. Our demo shows an ``uncertain'' band and a notice that it is not a forensic tool.
 
 The study has clear limits. It uses one training corpus, in English, and one small front end. The channel conditions
 are simulated, and white noise is a crude model of real background noise. Training uses clean audio only, without
