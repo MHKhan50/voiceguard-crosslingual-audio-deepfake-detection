@@ -24,6 +24,10 @@ a file scored 97.4%, and 99.9% when the same note was played through a speaker a
 trained only on ASVspoof 2019 LA studio recordings can therefore flag real voices that passed through a messaging app
 or a loudspeaker.
 
+After the padding fix (v0.4 demo model), the same WhatsApp file scored 93.6% ("Uncertain"), a new replayed recording of
+the note 95.5% ("Likely AI-generated") and a new laptop recording 0.0%: better, but the false alarm on replayed audio
+remains.
+
 ## Proposed contribution
 Study generator-disjoint generalisation, cross-language variation, telephone-channel degradation, calibration and selective abstention, and resource-efficient inference. Novelty is not established: a systematic literature review and data audit must precede any novelty claim.
 
