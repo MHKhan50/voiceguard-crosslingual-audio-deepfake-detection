@@ -145,6 +145,31 @@ clean: 1.8% before, 2.1% after); the conclusions above hold in both versions.
 ![EER by condition](results/fig_eer_by_condition.png)
 ![EER per attack](results/fig_eer_per_attack.png)
 
+### Out-of-domain test: In-the-Wild (Kaggle run, 11 Nov 2026, 12.9 min)
+The same classifiers, trained and calibrated on ASVspoof 2019 LA only, scored on all 31,779 clips of the
+In-the-Wild dataset (Müller et al., Interspeech 2022; 19,963 bona fide, 11,816 spoof, 54 speakers; first 4 s of each
+clip, 61% of clips are shorter). Nothing is tuned on it. Code: `src/voiceguard/eval_itw.py`; notebook:
+`notebooks/voiceguard_in_the_wild.ipynb`; full tables: [`results/in_the_wild/itw_tables.md`](results/in_the_wild/itw_tables.md).
+
+| Model (mean of 3 seeds) | ASVspoof clean EER % | In-the-Wild EER % | AUC | Cllr | minCllr |
+|---|---:|---:|---:|---:|---:|
+| WavLM layer 3 + MLP | 2.1 | 20.7 (sd 3.5) | 0.860 | 0.96 | 0.65 |
+| WavLM layer 6 + MLP | 1.7 | 18.0 (sd 1.5) | 0.888 | 1.38 | 0.59 |
+| WavLM layer 6 + logistic regression | 2.6 | 18.1 | 0.895 | 1.33 | 0.59 |
+| WavLM layer 9 + MLP | 3.5 | 25.4 (sd 0.4) | 0.807 | 2.22 | 0.77 |
+| WavLM layer 12 + MLP | 5.6 | 29.1 (sd 1.0) | 0.742 | 3.30 | 0.83 |
+| MFCC + MLP | 16.3 | 56.0 (sd 0.7) | 0.441 | 2.31 | 1.00 |
+
+- Layer 6 stays the best layer, as under the simulated channels; layer 12 and MFCC features do not transfer
+  (MFCC ranks real speech above fakes, AUC below 0.5).
+- Calibration does not transfer: Cllr is above 1 for 7 of the 8 WavLM models, while minCllr shows the scores still
+  separate the classes.
+- The main error is real speech called fake. With the threshold fixed at the ASVspoof dev EER point, layer 6 + MLP
+  (seed 42) calls 30.7% of real clips fake and 7.0% of fake clips real; layer 12 calls over 90% of real clips fake.
+- Demo rule (seed 42, the published model): of real clips 15.7% are shown as "Likely AI-generated", 34.6% as
+  uncertain and 49.7% as "Likely real"; of fake clips 83.2% are caught and 2.9% are shown as real. This matches the
+  informal WhatsApp false alarm reported above.
+
 ### Limitations of this baseline
 - One English corpus. The licence and content audit for the cross-lingual stage is in [`docs/data_audit.md`](docs/data_audit.md): MLAAD is non-commercial (CC BY-NC 4.0) and has matching real speech (M-AILABS) in only 8 of its 51 languages.
 - The phone line and the Opus condition are simulated, not recorded over a real network or app.
