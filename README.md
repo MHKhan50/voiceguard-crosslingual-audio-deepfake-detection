@@ -2,7 +2,7 @@
 
 **Working title:** Beyond Clean Audio: Calibrated Cross-Lingual Detection of AI-Generated Speech under Telephony Degradation and Unseen Voice Generators.
 
-**Status:** v0.2.0 adds the first runnable baseline (code, tests and a Kaggle notebook). Results will be added only from completed runs. This is not yet a validated detector or a paper.
+**Status:** v0.5.0: baseline experiments on ASVspoof 2019 LA under simulated phone-line conditions (v0.4), an out-of-domain test on In-the-Wild, a browser demo and a paper draft in [`paper/`](paper/). This is a research prototype, not a validated forensic detector.
 
 ## Problem
 AI-generated and cloned speech can support impersonation and social-engineering attacks. Detectors can fail when the generator, language, recording channel, codec, or noise differs from training data.
@@ -29,7 +29,7 @@ the note 95.5% ("Likely AI-generated") and a new laptop recording 0.0%: better, 
 remains.
 
 ## Proposed contribution
-Study generator-disjoint generalisation, cross-language variation, telephone-channel degradation, calibration and selective abstention, and resource-efficient inference. Novelty is not established: a systematic literature review and data audit must precede any novelty claim.
+Study generator-disjoint generalisation, cross-language variation, telephone-channel degradation, calibration and selective abstention, and resource-efficient inference. The literature check and an honest statement of what is and is not new are in [`docs/related_work.md`](docs/related_work.md).
 
 ## Research questions
 1. How much does performance degrade on unseen voice generators?
@@ -179,3 +179,6 @@ clip, 61% of clips are shorter). Nothing is tuned on it. Code: `src/voiceguard/e
 
 ## Hardware
 Local machine: MacBook with Apple M4 and 16 GB unified memory. Feature extraction runs on a Kaggle GPU; local work is limited to tests and analysis.
+
+## Licence
+Code: MIT (see [`LICENSE`](LICENSE)). The ASVspoof 2019 and In-the-Wild audio are not included and remain under their own licences.
