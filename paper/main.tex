@@ -119,7 +119,9 @@ compares them with a few real recordings.
 
 \subsection{Features and classifiers}
 Each clip is cut to its first 4\,s, passed through the channel condition and normalised to zero mean and unit variance. We extract hidden states 3, 6, 9
-and 12 of the frozen WavLM Base+ model \cite{chen2022wavlm} (float16 on GPU) and mean-pool them over frames, giving
+and 12 of the frozen WavLM Base+ model \cite{chen2022wavlm} (float16 on GPU). These are indices into the
+model's \texttt{hidden\_states} output, where index 0 is the input to the first of the 12 Transformer layers, so
+``layer 6'' is the output of the sixth Transformer layer. We mean-pool them over frames, giving
 a 768-dimensional vector per layer. As an acoustic baseline we use the mean and standard deviation of 40 MFCCs.
 Each feature set feeds two classifiers after standardisation: logistic regression with balanced class weights, and an
 MLP with one hidden layer of 256 units, early stopping and L2 penalty $10^{-3}$. The MLP is trained with classifier

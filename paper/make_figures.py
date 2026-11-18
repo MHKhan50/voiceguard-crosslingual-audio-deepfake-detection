@@ -22,11 +22,11 @@ def eer_by_layer() -> None:
     res = json.load(open(os.path.join(ROOT, "results", "results.json")))
     itw = json.load(open(os.path.join(ROOT, "results", "in_the_wild", "itw_results.json")))
     layers = [3, 6, 9, 12]
-    series = [("Clean", "#2a78d6", "o", lambda k: res["seed_summary"][k]["clean"]["eer"]["mean"]),
-              ("Opus 16 kbps", "#1baf7a", "^", lambda k: res["seed_summary"][k]["opus16"]["eer"]["mean"]),
-              ("Phone line", "#eda100", "s", lambda k: res["seed_summary"][k]["phone"]["eer"]["mean"]),
-              ("Phone + noise", "#eb6834", "D", lambda k: res["seed_summary"][k]["phone_noise15"]["eer"]["mean"]),
-              ("In-the-Wild", "#e87ba4", "v", lambda k: itw["seed_summary"][k]["eer"]["mean"])]
+    series = [("Clean", "#1F4E9C", "o", lambda k: res["seed_summary"][k]["clean"]["eer"]["mean"]),
+              ("Opus 16 kbps", "#5FA65A", "^", lambda k: res["seed_summary"][k]["opus16"]["eer"]["mean"]),
+              ("Phone line", "#E3A800", "s", lambda k: res["seed_summary"][k]["phone"]["eer"]["mean"]),
+              ("Phone + noise", "#C8102E", "D", lambda k: res["seed_summary"][k]["phone_noise15"]["eer"]["mean"]),
+              ("In-the-Wild", "#3A3A3A", "v", lambda k: itw["seed_summary"][k]["eer"]["mean"])]
     fig, ax = plt.subplots(figsize=(3.4, 2.3))
     ax.grid(axis="y", color=GRID, linewidth=0.6)
     ax.set_axisbelow(True)
@@ -53,7 +53,7 @@ def padding_effect() -> None:
     fig, ax = plt.subplots(figsize=(3.4, 1.9))
     ax.grid(axis="y", color=GRID, linewidth=0.6)
     ax.set_axisbelow(True)
-    bars = ax.bar(groups, gap, width=0.6, color="#2a78d6")
+    bars = ax.bar(groups, gap, width=0.6, color="#1F4E9C")
     for b, g, a in zip(bars, gap, agree):
         ax.text(b.get_x() + b.get_width() / 2, g + 0.06, "%.2f\n(%.1f%% agree)" % (g, a), ha="center",
                 va="bottom", fontsize=6.5, color=INK)
